@@ -1,13 +1,9 @@
-<svg width="100%" height="auto" viewBox="0 0 280 65" xmlns="http://www.w3.org/2000/svg" style="width:70%; margin: 0 auto; display: block;">
-  <defs>
-    <!-- 引入 Google Fonts 的 Volkhov 字体 -->
-    <style type="text/css">
-      @import url('https://fonts.googleapis.com/css2?family=Volkhov:wght@700&display=swap');
-    </style>
-  </defs>
-  <text x="0" y="50" font-size="60" font-family="Volkhov, Arial, sans-serif" font-weight="700" fill="#0070C0">Filter</text>
-  <text x="170" y="50" font-size="60" font-family="Volkhov, Arial, sans-serif" font-weight="700" fill="#C00000">GS</text>
-</svg>
+
+<div align="center">
+  <a href=https://zju3dv.github.io/LoG_webpage/>
+    <img src="docs/filtergs_logo.svg" alt="logo" width="70%" align="center"/>
+  </a>
+</div>
 
 ---
 
