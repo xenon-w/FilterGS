@@ -119,8 +119,8 @@ class TensorTree(nn.Module):
     
     def split_and_remove(self, flag_split, flag_remove):
         flag_remove = flag_remove & self.is_leaf & (~self.is_root)
-        # flag_split = flag_split & self.is_leaf & (self.depth < self.max_level)  # 硬编码为30
-        flag_split = flag_split & self.is_leaf & (self.depth < 30)  # 硬编码为30
+        # flag_split = flag_split & self.is_leaf & (self.depth < self.max_level)  # hard-coded to 30
+        flag_split = flag_split & self.is_leaf & (self.depth < 30)  # hard-coded to 30
         index_split = torch.where(flag_split)[0]
         index_remove = torch.where(flag_remove)[0]
         print(f' -> [{self.__class__.__name__}] split: {index_split.shape[0]} remove: {index_remove.shape[0]}')

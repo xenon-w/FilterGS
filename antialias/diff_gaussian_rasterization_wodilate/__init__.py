@@ -165,7 +165,7 @@ class _RasterizeGaussians(torch.autograd.Function):
                 raise ex
         else:
             grad_means2D, grad_colors_precomp, grad_opacities, grad_means3D, grad_cov3Ds_precomp, grad_sh, grad_scales, grad_rotations = _C.rasterize_gaussians_backward(*args)
-        # 在这里增加dL_dmeans3D的梯度
+        # Add gradient contribution to dL_dmeans3D here
         # print(grad_opacities)
         if grad_colors_precomp.shape[-1] > 3:
             grad_colors_precomp = grad_colors_precomp[:, :3]

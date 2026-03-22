@@ -37,11 +37,12 @@ mkdir submodules && cd submodules
 git clone https://github.com/graphdeco-inria/diff-gaussian-rasterization.git --recursive
 pip install ./diff-gaussian-rasterization -v
 # clone the modified gs
-git clone https://github.com/chingswy/diff-gaussian-rasterization.git mydiffgaussian --recursive
-cd mydiffgaussian
+cd ..
+git clone https://github.com/chingswy/diff-gaussian-rasterization.git antialias
+--recursive
+cd antialias
 git checkout antialias
 pip install . -v
-cd ..
 ```
 
 Install Simple-KNN for k-nearest neighbor searches:

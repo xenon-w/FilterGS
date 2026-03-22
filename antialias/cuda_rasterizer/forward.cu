@@ -508,7 +508,7 @@ renderCUDA(
 			for (int ch = 0; ch < CHANNELS; ch++){
 				if(ch < 3){
 					// C[ch] += features[collected_id[j] * CHANNELS + ch] * alpha * T;
-					// 注意：这里只有RGB的颜色
+					// Note: only RGB channels are used here
 					C[ch] += features[collected_id[j] * 3 + ch] * alpha * T;
 				}else if(ch == 3){
 					C[ch] += alpha * T;
@@ -525,7 +525,7 @@ renderCUDA(
 			}
 
 			// D += depths[collected_id[i]] * alpha * T;
-			// Depth不希望渐变
+			// Depth is treated as non-differentiable here
 			// D += depths[collected_id[i]] * T * con_o.w;
 			float contribution = T * alpha;
 			D += depths[collected_id[j]] * contribution;

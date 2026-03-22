@@ -69,7 +69,7 @@ class Gaussian(nn.Module):
         rotation = self.activation.rotation_activation(self.rotation[index].detach())        
         if False:
             radius2d_cuda = compute_radius(xyz, scaling, rotation, camera)
-        else: # 18.20ms
+        else: 
             proj_matrix = camera.raster_settings.projmatrix
             view_matrix = camera.raster_settings.viewmatrix
             tanfovx = camera.raster_settings.tanfovx
@@ -89,7 +89,7 @@ class Gaussian(nn.Module):
 
     @torch.no_grad()
     def prepare(self, rasterizer, camera):
-        # 可以检查可见的node
+        # Check visible nodes.
         xyz = self.xyz.detach()
         valid_flag, depth, p_proj = self._visible_flag_by_camera(xyz, camera, padding=0.5)
         self.visibility_flag = {
@@ -113,9 +113,9 @@ class GaussianPoint(Gaussian):
         x, y = torch.meshgrid(x, y)
         xyz = torch.stack((x, y), axis=-1).reshape(-1, 2)
         xyz = torch.cat([xyz, torch.zeros((xyz.shape[0], 1)) + height], dim=1)
-        colors = torch.zeros_like(xyz) + 0.5 # 使用0.5来初始化颜色
+        colors = torch.zeros_like(xyz) + 0.5 # Initialize RGB to 0.5.
         scaling = torch.zeros_like(xyz) + init_step
-        scaling[:, 2] = init_step * 0.1 #取一个比较小的值
+        scaling[:, 2] = init_step * 0.1 # Use a smaller z-scale.
         opacity = torch.zeros((xyz.shape[0], 1)) + init_opacity
         return xyz, colors, scaling, opacity
 
@@ -344,7 +344,7 @@ class LoG(nn.Module):
         self.counter.radius3d_max.fill_(self.gaussian.xyz_scale * 0.2)
         self.gaussian.scaling = torch.maximum(self.gaussian.scaling, radius3d_min)
         if self.use_view_correction:
-            # 使用训练集的大小来初始化视图校正
+            # Initialize view correction using training set size.
             print(f'[{self.__class__.__name__}] Initializing view correction with train dataset size: {train_dataset_size}')
             self.view_correction.init(train_dataset_size)
     
@@ -549,7 +549,8 @@ class LoG(nn.Module):
         if num_split > 0:
             self.counter.radius3d_max[-num_split:] = scaling_decay * radius_max[flag_split][:, None].repeat(1, self.splitter.N).reshape(-1)
         self.counter.reset(self.num_points)
-        for depth in range(31):  # 硬编码为31，打印0-30层
+        # Hard-coded to 31 levels (print levels 0-30).
+        for depth in range(31):  
             flag_depth = self.tree.depth == depth
             if flag_depth.sum() == 0:
                 continue

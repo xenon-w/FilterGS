@@ -1,0 +1,45 @@
+from torch.utils.cpp_extension import load
+import os
+import torch
+
+# Use a dedicated extension name to avoid loading stale cached module
+# that only exposes `compute_radius` without `compute_visibility_radius`.
+compute_radius_module = load(
+    verbose=False,
+    name='compute_radius_v2',
+    sources=[os.path.join(os.path.dirname(__file__), 'compute_radius_kernel_v2.cu')],
+    extra_include_paths=[
+        os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            'antialias',
+            'third_party',
+            'glm',
+        )
+    ],
+    extra_cuda_cflags=['-O2']
+)
+
+
+def compute_visibility_radius(means3d, scales, rotations, projmatrix, viewmatrix,
+                              tree_node_index, ancestor_path,
+                              focal_x, focal_y, tan_fovx, tan_fovy,
+                              radius_max, padding=0.05, radius_filter_threshold=100.0):
+    """Compute visibility mask, 2D radius, and depth with optional LOD filtering."""
+    tensors = (means3d, scales, rotations, projmatrix, viewmatrix, tree_node_index, ancestor_path)
+    if not all(t.is_cuda for t in tensors):
+        raise ValueError("All input tensors must be CUDA tensors")
+
+    if not hasattr(compute_radius_module, 'compute_visibility_radius'):
+        raise RuntimeError(
+            "compute_radius extension was built without compute_visibility_radius; "
+            "please rebuild LoG/cuda extension cache."
+        )
+
+    return compute_radius_module.compute_visibility_radius(
+        means3d, scales, rotations,
+        projmatrix, viewmatrix,
+        tree_node_index, ancestor_path,
+        float(focal_x), float(focal_y),
+        float(tan_fovx), float(tan_fovy),
+        float(padding), float(radius_max),
+        float(radius_filter_threshold))

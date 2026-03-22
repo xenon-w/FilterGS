@@ -13,7 +13,7 @@ import warnings
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from LoG.model.filtergs import FilterGS
+from FilterGS.filtergs import FilterGS
 from LoG.utils.command import load_statedict, update_global_variable
 from LoG.utils.config import Config, load_object
 from LoG.utils.file import create_from_point

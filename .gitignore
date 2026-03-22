@@ -1,5 +1,6 @@
 data
 debug
+submodules
 **.pyc
 **/__pycache__
 *.egg-info

@@ -146,23 +146,23 @@ class ImageDataset(ImageBase):
         flag, infos = self.read_cache(name=cachedir+'.pkl')
         if not flag:
             cameras = self.check_cameras(scale3d=scale3d, scale_camera_K=scale_camera_K)
-            print(f'[{self.__class__.__name__}] 从相机文件加载了 {len(cameras)} 个相机')
+            print(f'[{self.__class__.__name__}] loaded {len(cameras)} cameras from file')
             
-            # 如果指定了namelist，只处理列表中的相机
+            # If namelist is provided, only keep cameras listed there.
             if self.namelist is not None:
-                print(f'[{self.__class__.__name__}] 使用namelist过滤，指定相机: {self.namelist}')
-                print(f'[{self.__class__.__name__}] 相机文件中的相机数量: {len(cameras)}')
-                print(f'[{self.__class__.__name__}] 相机文件中的前10个相机: {list(cameras.keys())[:10]}')
+                print(f'[{self.__class__.__name__}] filtering cameras with namelist: {self.namelist}')
+                print(f'[{self.__class__.__name__}] camera count before filter: {len(cameras)}')
+                print(f'[{self.__class__.__name__}] first 10 cameras in file: {list(cameras.keys())[:10]}')
                 
                 filtered_cameras = {}
                 for name in self.namelist:
                     if name in cameras:
                         filtered_cameras[name] = cameras[name]
-                        print(f'[{self.__class__.__name__}] 找到相机: {name}')
+                        print(f'[{self.__class__.__name__}] found camera: {name}')
                     else:
-                        print(f'[{self.__class__.__name__}] 警告: namelist中的相机 {name} 在相机文件中不存在')
+                        print(f'[{self.__class__.__name__}] warning: camera {name} from namelist is missing in camera file')
                 cameras = filtered_cameras
-                print(f'[{self.__class__.__name__}] 过滤后剩余 {len(cameras)} 个相机')
+                print(f'[{self.__class__.__name__}] cameras after filter: {len(cameras)}')
             
             # undistort and scale
             cameras_cache = {}
@@ -170,7 +170,7 @@ class ImageDataset(ImageBase):
             processed_count = 0
             for camname, camera_dis in cameras.items():
                 processed_count += 1
-                print(f'[{self.__class__.__name__}] 处理相机 {processed_count}/{len(cameras)}: {camname}')
+                print(f'[{self.__class__.__name__}] processing camera {processed_count}/{len(cameras)}: {camname}')
                 if pre_undis:
                     camera = self.check_undis_camera(camname, cameras_cache, camera_dis, share_camera)
                 else:
@@ -179,10 +179,10 @@ class ImageDataset(ImageBase):
                 # camera_.pop('mapx')
                 # camera_.pop('mapy')
                 
-                # 尝试不同的图像格式
+                # Try multiple image extensions.
                 imgname = None
                 possible_extensions = [ext, ext.lower(), ext.upper()]
-                # 添加常见的图像格式
+                # Add common image extensions.
                 common_extensions = ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG', '.bmp', '.BMP', '.tiff', '.TIFF']
                 for common_ext in common_extensions:
                     if common_ext not in possible_extensions:
@@ -195,12 +195,12 @@ class ImageDataset(ImageBase):
                         break
                 
                 if imgname is None:
-                    # 尝试模糊匹配
+                    # Fuzzy filename matching fallback.
                     images_dir = join(self.root, images)
                     if os.path.exists(images_dir):
                         files_in_dir = os.listdir(images_dir)
                         
-                        # 尝试模糊匹配文件名
+                        # Try basename-level fuzzy matching.
                         for file in files_in_dir:
                             file_base = os.path.splitext(file)[0]
                             if file_base == camname or file_base.startswith(camname) or camname in file_base:
@@ -208,15 +208,15 @@ class ImageDataset(ImageBase):
                                 break
                     
                     if imgname is None:
-                        print(f'[{self.__class__.__name__}] 警告: 无法找到相机 {camname} 的图像文件')
-                        print(f'  尝试的路径: {join(self.root, images, camname + ext)}')
-                        print(f'  图像目录: {join(self.root, images)}')
+                        print(f'[{self.__class__.__name__}] warning: image file not found for camera {camname}')
+                        print(f'  tried path: {join(self.root, images, camname + ext)}')
+                        print(f'  image directory: {join(self.root, images)}')
                         if os.path.exists(images_dir):
                             files_in_dir = os.listdir(images_dir)
-                            print(f'  目录中的文件: {files_in_dir[:10]}...' if len(files_in_dir) > 10 else f'  目录中的文件: {files_in_dir}')
+                            print(f'  files in directory: {files_in_dir[:10]}...' if len(files_in_dir) > 10 else f'  files in directory: {files_in_dir}')
                         continue
                 
-                # 获取实际的文件扩展名和相对路径
+                # Record actual filename and extension.
                 actual_ext = os.path.splitext(imgname)[1]
                 actual_filename = os.path.basename(imgname)
                 infos.append({
@@ -234,32 +234,32 @@ class ImageDataset(ImageBase):
             self.write_cache(infos, name=cachedir+'.pkl')
         
         if len(infos) == 0:
-            # 提供更详细的调试信息
-            debug_info = f'[{self.__class__.__name__}] 没有找到任何有效的图像文件！\n'
-            debug_info += f'配置信息:\n'
-            debug_info += f'  - 根目录: {self.root}\n'
-            debug_info += f'  - 图像目录: {join(self.root, images)}\n'
-            debug_info += f'  - 扩展名: {ext}\n'
-            debug_info += f'  - 相机文件: {join(self.root, cameras)}\n'
+            # Provide detailed debug information for missing images.
+            debug_info = f'[{self.__class__.__name__}] no valid image files were found.\n'
+            debug_info += f'Configuration:\n'
+            debug_info += f'  - root: {self.root}\n'
+            debug_info += f'  - images dir: {join(self.root, images)}\n'
+            debug_info += f'  - extension: {ext}\n'
+            debug_info += f'  - cameras file: {join(self.root, cameras)}\n'
             
             if self.namelist is not None:
                 debug_info += f'  - namelist: {self.namelist}\n'
             
-            # 检查图像目录
+            # Inspect image directory contents.
             images_dir = join(self.root, images)
             if os.path.exists(images_dir):
                 files = os.listdir(images_dir)
-                debug_info += f'图像目录中的文件数量: {len(files)}\n'
-                debug_info += f'前20个文件: {files[:20]}\n'
+                debug_info += f'file count in image directory: {len(files)}\n'
+                debug_info += f'first 20 files: {files[:20]}\n'
                 
-                # 检查namelist中的文件
+                # Check namelist matching status.
                 if self.namelist is not None:
-                    debug_info += f'namelist文件匹配情况:\n'
+                    debug_info += f'namelist match report:\n'
                     for name in self.namelist:
                         matching_files = [f for f in files if name in f]
                         debug_info += f'  {name}: {matching_files}\n'
             else:
-                debug_info += f'图像目录不存在: {images_dir}\n'
+                debug_info += f'image directory does not exist: {images_dir}\n'
             
             raise ValueError(debug_info)
         

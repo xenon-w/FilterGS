@@ -1,8 +1,8 @@
-<div align="center">
-  <a href=https://xenon-w.github.io/FilterGS.github.io/>
-    <img src="docs/filtergs_logo.jpg" alt="logo" width="100%" align="center"/>
-  </a>
-</div>
+<svg width="100%" height="auto" viewBox="0 0 280 65" xmlns="http://www.w3.org/2000/svg" style="width:70%; margin:0 auto; display:block; line-height:1;">
+  <rect width="280" height="65" fill="transparent"/>
+  <text x="0" y="50" font-size="60" font-family="Volkhov, Arial, sans-serif" font-weight="bold" fill="#0070C0">Filter</text>
+  <text x="172" y="50" font-size="60" font-family="Volkhov, Arial, sans-serif" font-weight="bold" fill="#C00000">GS</text>
+</svg>
 
 ---
 
@@ -10,7 +10,7 @@
 ![star](https://img.shields.io/github/stars/zju3dv/LoG)
 [![license](https://img.shields.io/badge/license-zju3dv-white)](license) -->
 
-**FilterGS** utilizes a single RTX 4090 for training highly realistic urban-scale models and for their real-time rendering. Visit our [**project page**](https://xenon-w.github.io/FilterGS.github.io/) for more demos.
+**[*CVPR'26*] FilterGS** utilizes a single RTX 4090 for training highly realistic urban-scale models and for their real-time rendering. Visit our [**project page**](https://xenon-w.github.io/FilterGS.github.io/) for more demos.
 
 Our code is built upon PyTorch and leverages [gaussian-splatting](https://github.com/graphdeco-inria/diff-gaussian-rasterization) and [LoG](https://github.com/zju3dv/LoG) techniques.
 
@@ -18,11 +18,11 @@ Our code is built upon PyTorch and leverages [gaussian-splatting](https://github
 
 For a smooth setup, follow the [installation guide](./docs/install.md).
 
-We employ [Colmap](https://colmap.github.io/) to prepare the dataset. Refer to the [preprocessing documentation](./docs/preprocess.md) for detailed instructions.
+We employ [COLMAP](https://colmap.github.io/) to prepare the dataset. Refer to the [preprocessing documentation](./docs/preprocess.md) for detailed instructions.
 
 ## Training
 
-Training the model is as simple as one command:
+Training the model is as simple as one command. Note: You need to modify the model path in the train.yml file.
 
 ```bash
 python3 apps/train.py --cfg config/GauUScene/college/train.yml split train
@@ -32,15 +32,18 @@ We automatically configure heuristic parameters based on the dataset size.
 
 ## Rendering
 
-Before rendering the model, it is necessary to calculate the ancestor_path attribute of the model, which will take about 5 minutes:
+Before rendering, two steps are required: calculating the ancestor path of the model, and computing the Gaussian redundancy of the scene. Execute the following two commands respectively, which takes about 10 minutes in total:
 ```bash
-python apps/precompute_ancestor.py --ckpt /PATH/TO/YOUR/MODEL.pth --out /OUTPUT/PATH/model_ancestor.pth
+# ancestor path
+python apps/ancestor.py --ckpt /PATH/TO/YOUR/MODEL/.pth --out /OUTPUT/ANCESTOR/PATH/model_ancestor.pth
+# KPC & GTC
+python3 apps/render.py --cfg config/GauUScene/college/render.yml --debug
 ```
 
-Rendering the model is also as simple as one command:
+Note: Each scene only needs to be processed once with the above steps. For subsequent rendering runs, execute the command below:
 
 ```bash
-python3 apps/render.py --cfg config/GauUScene/college/render.yml split train
+python3 apps/render.py --cfg config/GauUScene/college/render.yml
 ```
 `--skip-save` and `--debug` are optional parameters; `--skip-save` skips saving rendered images, while `--debug` outputs detailed parameters of the rendering process.
 
@@ -54,10 +57,8 @@ We acknowledge the following inspirational prior work:
 - [UrbanScene dataset](https://saliteta.github.io/CUHKSZ_SMBU/)
 - [GauUScene dataset](https://github.com/RingoWRW/UAVD4L)
 
-More details to be added later.
-If you have any questions, please feel free to point them out in the issue section.
 
-Contributions are warmly welcomed! If you've made significant progress on any of these fronts, please consider submitting a pull request.
+Contributions are warmly welcomed! If you've made significant progress on any of these fronts, please consider submitting a pull request. If you have any questions, please feel free to point them out in the issue section.
 
 
 ## Citation

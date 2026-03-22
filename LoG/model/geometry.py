@@ -108,13 +108,13 @@ def computeCov2D0(cov3D, mean, viewmatrix, camera, DILATE_PIXEL=0.3):
     ty = tytz * tz
     N = mean.shape[0]
     J = torch.zeros((N, 3, 3), device=mean.device)
-    # 填充 J 的值
+    # Fill values in J
     J[:, 0, 0] = focal_x / tz
     J[:, 0, 2] = -(focal_x * tx) / (tz * tz)
     J[:, 1, 1] = focal_y / tz
     J[:, 1, 2] = -(focal_y * ty) / (tz * tz)
     W = viewmatrix[:3, :3].t()
-    # 计算 T = W * J
+    # Compute T = W * J
     T = torch.matmul(J, W)
     Vrk = cov3D
 

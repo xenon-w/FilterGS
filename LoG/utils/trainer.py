@@ -202,7 +202,7 @@ class Trainer(nn.Module):
                 self.model.clear()
                 batch = prepare_batch(data, self.device)
                 self.model.init(self.render, batch, iteration)
-            # 使用训练集的大小来初始化视图校正，而不是验证集的大小
+            # Initialize view correction using training set size.
             train_dataset_size = len(dataset)
             self.model.at_init_final_with_train_size(train_dataset_size)
             partial_indices = list(range(len(dataset)))
@@ -218,36 +218,36 @@ class Trainer(nn.Module):
                 batch = prepare_batch(data, self.device)
                 print(f"[DEBUG] Quick view {iteration}: processing {batch['imgname'][0]}")
                 
-                # 渲染
+                # Render prediction.
                 ret = self.render.vis(batch, self.model)
                 vis = ret['render'][0]
                 
                 print(f"[DEBUG] Render result shape: {vis.shape}, range: [{vis.min().item():.4f}, {vis.max().item():.4f}]")
                 
-                # 检查渲染结果是否全为零
+                # Check for all-zero render output.
                 if vis.abs().max() < 1e-6:
                     print(f"[WARNING] Render result is all zeros for image {iteration}")
-                    # 创建一个默认的黑色图像作为渲染结果
+                    # Fallback to a black image.
                     vis = torch.zeros_like(vis)
                 
                 vis = self.render.tensor_to_bgr(vis)
                 img = cv2.imread(batch['imgname'][0])
                 
-                # 检查图像是否成功读取
+                # Check whether image loading succeeded.
                 if img is None:
                     print(f"Warning: Could not read image {batch['imgname'][0]}, skipping...")
                     continue
                     
-                # 确保img是3维数组
+                # Ensure `img` has 3 dimensions.
                 if len(img.shape) == 2:
                     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
                 
-                # 确保vis和img都是3维数组
+                # Ensure both `vis` and `img` are 3D arrays.
                 if len(vis.shape) != 3 or len(img.shape) != 3:
                     print(f"Warning: Dimension mismatch - vis: {vis.shape}, img: {img.shape}, skipping...")
                     continue
                     
-                # 确保尺寸匹配，如果不匹配则调整img的尺寸
+                # Resize `img` if resolution does not match `vis`.
                 if vis.shape[:2] != img.shape[:2]:
                     img = cv2.resize(img, (vis.shape[1], vis.shape[0]))
                 
@@ -258,7 +258,7 @@ class Trainer(nn.Module):
                     print(f"[DEBUG] Saved quick view image: {outname}")
                 except Exception as e:
                     print(f"Warning: Failed to stack images for {batch['imgname'][0]}: {e}")
-                    # 如果堆叠失败，只保存渲染结果
+                    # If stacking fails, save render output only.
                     outname = join(self.exp, 'init', f'model_{iteration}_{os.path.basename(batch["imgname"][0])}.jpg')
                     cv2.imwrite(outname, vis)
                     print(f"[DEBUG] Saved render-only image: {outname}")
@@ -401,7 +401,7 @@ class Trainer(nn.Module):
                 batch = prepare_batch(_data, self.device)
                 print(f"[DEBUG] Batch prepared, image: {batch['imgname'][0]}")
                 
-                # 检查GT图像信息
+                # Check GT image information.
                 if 'image' in batch:
                     print(f"[DEBUG] GT shape: {batch['image'].shape}")
                 elif 'camera' in batch and 'image' in batch['camera']:
@@ -414,7 +414,7 @@ class Trainer(nn.Module):
                 model.clear()
                 print(f"[DEBUG] Model cleared")
                 
-                # 渲染预测结果
+                # Render prediction.
                 output = self.render_val.vis(batch, self.model, background=torch.ones_like(self.render_val.background))
                 print(f"[DEBUG] Rendering completed, output keys: {list(output.keys())}")
                 
@@ -426,7 +426,7 @@ class Trainer(nn.Module):
                 print(f"[DEBUG] Pred range: [{pred.min().item():.4f}, {pred.max().item():.4f}]")
                 print(f"[DEBUG] GT range: [{gt.min().item():.4f}, {gt.max().item():.4f}]")
                 
-                # 检查是否有无效值
+                # Check for invalid values.
                 if torch.isnan(pred).any():
                     print(f"[ERROR] NaN detected in pred!")
                 if torch.isnan(gt).any():
@@ -442,30 +442,30 @@ class Trainer(nn.Module):
                     gt_left = gt[:, :, :gt.shape[2]//2]
                     pred_left = pred[:, :, :pred.shape[2]//2]
                     
-                    # 防止除零错误
+                    # Avoid divide-by-zero.
                     pred_squared_sum = (pred_left ** 2).sum(dim=-1).sum(dim=-1)
-                    if (pred_squared_sum > 1e-8).any():  # 只有当预测值不为零时才应用view correction
+                    if (pred_squared_sum > 1e-8).any():  # Apply view correction only when prediction is non-zero.
                         view_correct = (gt_left * pred_left).sum(dim=-1).sum(dim=-1) / pred_squared_sum
                         pred = torch.clamp(pred * view_correct[:, None, None], 0., 1.)
                         print(f"[DEBUG] View correction applied, view_correct: {view_correct}")
                     else:
                         print(f"[DEBUG] Skipping view correction - pred is all zeros")
                 
-                # 计算评估指标
+                # Compute evaluation metrics.
                 l1 = torch.mean(torch.abs(pred - gt))
                 _psnr = psnr(pred, gt)
                 
                 print(f"[DEBUG] L1 loss: {l1.item():.6f}")
                 print(f"[DEBUG] PSNR: {_psnr:.6f}")
                 
-                # 检查指标是否为nan
+                # Check metrics for NaN.
                 if torch.isnan(l1):
                     print(f"[ERROR] L1 loss is NaN!")
                 if torch.is_tensor(_psnr):
                     if torch.isnan(_psnr):
                         print(f"[ERROR] PSNR is NaN!")
                 else:
-                    # 使用numpy来检查float的nan和inf，避免math模块引用问题
+                    # Use numpy to check float NaN/Inf values.
                     import numpy as np
                     if isinstance(_psnr, float) and (np.isnan(_psnr) or np.isinf(_psnr)):
                         print(f"[ERROR] PSNR is NaN or Inf!")
@@ -485,7 +485,7 @@ class Trainer(nn.Module):
                 
                 metric['imgname'].append(batch['imgname'][0])
                 
-                # 保存可视化结果
+                # Save visualization output.
                 if (iteration + 1) % 1000 == 0 or visualize:
                     os.makedirs(logdir, exist_ok=True)
                     outname = join(logdir, f'{batch["index"][0]:06d}_{os.path.basename(metric["imgname"][-1])}.jpg')
@@ -499,7 +499,7 @@ class Trainer(nn.Module):
                 print(f"[ERROR] Error processing validation image {idx + 1}: {e}")
                 import traceback
                 traceback.print_exc()
-                # 不要continue，而是记录错误并继续处理下一张图像
+                # Do not stop validation for a single failed image.
                 print(f"[WARNING] Skipping validation image {idx + 1} due to error")
         # summary the metrics
         record = {
@@ -517,7 +517,7 @@ class Trainer(nn.Module):
                 print(f"[WARNING] No values for metric {key}")
                 continue
                 
-            # 过滤掉nan值
+            # Filter out NaN/Inf values.
             valid_vals = []
             for v in val:
                 if torch.is_tensor(v):

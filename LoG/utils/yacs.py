@@ -428,7 +428,7 @@ def _merge_a_into_b(a, b, root, key_list):
     )
     if '_no_merge_' in a.keys() and a['_no_merge_']:
         b.clear()
-        # TODO:这里好像b好像有时候是a的拷贝，有时候不是
+        # TODO: verify whether b is a copy of a in all branches
         if '_no_merge_' in a.keys():
             a.pop('_no_merge_')
 

@@ -288,5 +288,5 @@ if __name__ == '__main__':
     try:
         setproctitle.setproctitle("WangYiXian_City_Train")
     except:
-        pass  # 如果没有setproctitle模块，忽略错误
+        pass  # Ignore error if setproctitle is unavailable
     main()
