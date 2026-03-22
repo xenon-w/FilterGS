@@ -1,7 +1,7 @@
 
 <div align="center">
-  <a href=https://zju3dv.github.io/LoG_webpage/>
-    <img src="docs/filtergs_logo.svg" alt="logo" width="70%" align="center"/>
+  <a href=https://xenon-w.github.io/FilterGS.github.io/>
+    <img src="docs/filtergs_logo.svg" alt="logo" width="60%" align="center"/>
   </a>
 </div>
 
